@@ -1,25 +1,17 @@
-<div class="container d-flex justify-content-between mt-2">
+
+
+  <div class="container d-flex justify-content-between mt-2">
     <h3>{{title}}</h3>
-    <button class="btn btn-success " style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .5rem; --bs-btn-font-size: .75rem;" link="/">Agregar Nuevo</button>
 </div>
 
+<div class="container">
+    <div class="row products-container" id="productsContainer"></div>
+</div>
 
-
-
-
-<table class="table ">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">Name</th>
-      <th scope="col">Description</th>
-      <th scope="col">Price</th>
-      <th scope="col">Status</th>
-      <th scope="col">Code</th>
-      <th scope="col">Stock</th>
-    </tr>
-  </thead>
-  <tbody class="products-container">
-  
-  </tbody>
-</table>
+<!-- Agrega la paginación -->
+<div class="container mt-3">
+    <div class="d-flex justify-content-center">
+        <button id="prevPageBtn" class="btn btn-primary me-2">Página anterior</button>
+        <button id="nextPageBtn" class="btn btn-primary">Página siguiente</button>
+    </div>
+</div>

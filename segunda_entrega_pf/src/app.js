@@ -53,10 +53,47 @@ try{
     io.on('connection', socket => {
         console.log('Conexión con Socket.io');
 
-        socket.on('load', async () => {
-            const products = await productsModel.find();
-            socket.emit('products', products);
+
+        const itemsPerPage = 10;
+        socket.on('load', async ({ page }) => {
+            try {
+              const options = {
+                limit: itemsPerPage,
+                page,
+                lean: true,
+              };
+        
+              const products = await productsModel.paginate({}, options);
+              const totalPages = Math.ceil(products.total / itemsPerPage);
+        
+              socket.emit('products', { products: products.docs, totalPages });
+            } catch (error) {
+              console.error('Error al obtener productos paginados:', error);
+              socket.emit('error', { message: 'Error al obtener productos paginados' });
+            }
+          });
+        
+        
+        socket.on('pageChanged', async newPage => {
+            try {
+                const options = {
+                    limit: itemsPerPage,
+                    page: newPage,
+                    lean: true
+                };
+        
+                const products = await productsModel.paginate({}, options);
+                io.emit('products', products);
+            } catch (error) {
+                console.error('Error al obtener productos paginados:', error);
+            }
         });
+        
+
+
+
+
+
 
         socket.on('carts', async () => {
             const carts = await Carts.find();
@@ -73,13 +110,30 @@ try{
             socket.broadcast.emit('newMessage', data);
 
         });
+
+        socket.on('addToCart', async data => {
+            if (data.product) {
+                cart.push(data.product);
+                io.emit('cartUpdated', cart);
+            } else if (data.productId) {
+                const product = await controller.getProductById(data.productId);
+                if (!product.error) {
+                    cart.push(product);
+                    io.emit('cartUpdated', cart);
+                }
+            }
+        });
+        
+   
+
+        
+        
     });
  
  }catch(error){
      console.error("Error al conectar a la base de datos:", error.message)
 }
 
-//si no encuentra la ruta va por defecto aca
 app.get('*', (req, res) => {
     res.status(400).send(`<h1 style="color:red">Pagina no encontrada</h1>`)
 });
@@ -88,7 +142,6 @@ app.get('*', (req, res) => {
 
 
 
-//si no encuentra la ruta va por defecto aca
 app.get('*', (req, res) => {
     res.status(400).send(`<h1 style="color:red">Pagina no encontrada</h1>`)
 });

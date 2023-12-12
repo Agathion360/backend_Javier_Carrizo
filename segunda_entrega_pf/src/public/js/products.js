@@ -1,23 +1,57 @@
-const socket = io();
-const productsContainer = document.querySelector('.products-container');
 
-socket.emit('load');
+const socket = io();
+const productsContainer = document.getElementById('productsContainer');
+let currentPage = 1;
+
+const changePage = (page) => {
+    socket.emit('load', { page });
+};
+
+document.getElementById('nextPageBtn').addEventListener('click', () => {
+    currentPage++;
+    changePage(currentPage);
+});
+
+document.getElementById('prevPageBtn').addEventListener('click', () => {
+    if (currentPage > 1) {
+        currentPage--;
+        changePage(currentPage);
+    }
+});
+
+productsContainer.addEventListener('click', (event) => {
+    if (event.target.classList.contains('pageBtn')) {
+        const pageNumber = parseInt(event.target.dataset.page);
+        currentPage = pageNumber;
+        changePage(currentPage);
+    }
+});
+
+socket.emit('load', { page: currentPage });
 
 console.log('Conexión con Socket.io');
-socket.on('products', products => {
+socket.on('products', data => {
+    const products = data.products;
     productsContainer.innerHTML = '';
     products.forEach(prod => {
         productsContainer.innerHTML += `
-        <tr class="table">
-        <th scope="row" class="col mx-6 text-center table2">${prod.id}</th>
-        <td class="mx-6 text-left title-product table2">${prod.title}</td>
-        <td class="mx-6 text-left description-product table2">${prod.description}</td>
-        <th class="mx-6 text-center table2">$ ${prod.price}</th>
-        <td class="mx-6 text-center table2">${prod.status}</td>
-        <td class="mx-6 text-center table2">${prod.code}</td>
-        <td class="mx-6 text-center table2">${prod.stock}</td>
-       
-    </tr>
+            <div class="col">
+                <div class="card" style="width: 18rem;">
+                    <img src="..." class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">${prod.title}</h5>
+                        <p class="card-text">${prod.description}</p>
+                        <button class="btn btn-primary addToCartBtn" data-product-id="${prod._id}">Agregar al carrito</button>
+                    </div>
+                </div>
+            </div>
         `;
     });
+});
+
+productsContainer.addEventListener('click', event => {
+    if (event.target.classList.contains('addToCartBtn')) {
+        const productId = event.target.dataset.productId;
+        socket.emit('addToCart', { productId });
+    }
 });
